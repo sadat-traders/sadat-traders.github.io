@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://murtuzadeveloper.github.io/sitemap.xml

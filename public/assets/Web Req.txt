@@ -1,0 +1,376 @@
+Project: Sadat Chicken Wholesale
+Website Type: Professional Chicken Meat Wholesale & Retail E-Commerce Website
+
+1. Project Objective
+Build a complete, modern, premium, production-ready website for Sadat Chicken Wholesale, a business specializing in fresh, hygienic, high-quality chicken meat, wholesale chicken cuts, and bulk supply.
+The website must look like a professional food distribution company, not a basic grocery store.
+Primary customers:
+- Restaurants and hotels
+- Catering businesses
+- Meat shops and retailers
+- Supermarkets
+- Food distributors
+- Individual retail customers
+- Bulk chicken buyers
+The website must support product browsing, wholesale inquiries, WhatsApp ordering, shopping carts, and mobile-friendly customer experiences.
+
+2. Technology Stack
+Use:
+- React.js + Vite
+- Tailwind CSS
+- JavaScript or TypeScript
+- Lucide React icons
+- Framer Motion for smooth animations
+- React Router for navigation
+- LocalStorage for cart persistence
+- SEO-friendly page structure
+Hosting requirement: The complete website must be compatible with GitHub Pages and deployable without paid services.
+Use a clean, scalable component-based architecture.
+
+3. Premium UI/UX Design
+Create a luxurious, attractive, clean, and trustworthy meat wholesale brand identity.
+Color palette:
+- Deep Burgundy: `#7A1020`
+- Premium Red: `#C62828`
+- Dark Charcoal: `#171717`
+- White: `#FFFFFF`
+- Warm Cream: `#FFF8F2`
+- Gold Accent: `#D4AF37`
+Design requirements:
+- Professional wholesale food industry appearance
+- Attractive hero banners with realistic chicken meat photography
+- High-quality product cards
+- Smooth scrolling and hover animations
+- Modern typography
+- Premium header and navigation
+- Mobile-first responsive layout
+- Attractive buttons and category filters
+- Elegant spacing and subtle shadows
+- Loading states and image fallbacks
+- Accessible and intuitive navigation
+Provide a polished light theme with premium dark sections.
+
+4. Website Pages
+Develop the following complete pages:
+Home
+- Premium hero banner Use Product Images
+- Sadat Chicken Wholesale branding
+- Headline: "Fresh Chicken. Premium Quality. Wholesale Prices."
+- Subheading: "Your Trusted Partner for Fresh, Hygienic & Quality Chicken Supply."
+- Shop Now button
+- Request Wholesale Quote button
+- Featured chicken products
+- Product categories
+- Why Choose Us section
+- Bulk supply benefits
+- Customer testimonials section (only verified testimonials; otherwise use placeholder content)
+- Contact and WhatsApp ordering CTA
+
+Products
+- Responsive product grid
+- Category filters
+- Search products
+- Product images
+- Product names
+- Product weight/unit
+- Product detail buttons
+- Add to Cart buttons
+- WhatsApp inquiry buttons +923492355072
+
+Product Details
+- Large product image
+- Product specifications
+- Weight KG
+- Quantity selector
+- Wholesale quotation option
+- Add to Cart
+- WhatsApp Order Now +923492355072
+- Related products
+
+Wholesale & Bulk Orders
+- Wholesale business introduction
+- Restaurant and hotel supply
+- Bulk chicken distribution
+- Custom quantity requests
+- Request quotation form
+- WhatsApp bulk ordering
+
+About Us
+- Business introduction
+- Quality and hygiene commitment
+- Fresh chicken supply
+- Customer satisfaction
+- Professional company presentation
+
+Contact Us
+- Contact form
+- WhatsApp contact +923492355072
+- Business phone number +923492355072
+
+- Business hours (10AM to 10PM PKT)
+
+
+Shopping Cart
+- Add/remove products
+- Increase/decrease quantity
+- Unit-based pricing
+- Order summary
+- Total in PKR
+- WhatsApp checkout +923492355072
+
+5. Chicken Product Catalog
+Create individual premium product cards for the following products:
+1. Skinless Chicken Wing Tip
+2. Skinless Chicken Mid-Joint Wing
+3. Skinless Chicken Drumette
+4. Skinless Chicken Neck
+5. Skinless Chicken Forequarter (Breast and Wing)
+6. Skinless Chicken 3-Joint Wing
+7. Skinless Chicken Breast Boneless
+8. Skinless Chicken Whole Leg
+9. Skinless Chicken Leg Quarter
+10. Skinless Whole Chicken
+11. Skinless Chicken Meat
+
+Product image requirements:
+- 500 × 500 px preferred
+- High-resolution, realistic product photography
+- White or clean studio backgrounds
+- Fresh, uncooked chicken meat
+- Accurate representation of each chicken cut
+- Consistent product photography style
+- Optimized image loading
+
+Use individual images for each product. Do not reuse the same chicken image across different cuts.
+Store product data in a centralized catalog so products, prices, units, descriptions, and availability can be updated easily.
+Do not invent real prices. Use "Contact for Price" or configurable placeholder pricing until actual prices are supplied.
+
+6. WhatsApp Ordering System
+Implement a fully functional WhatsApp ordering system.
+When customers click "Order on WhatsApp", automatically generate a message containing:
+
+- Customer-selected product names
+- Product quantities
+- Selected units
+- Individual prices if available
+- Total amount if calculable
+- Customer name if entered important order will not procede
+- Delivery location if entered important order will not procede
+
+Example:
+
+"Hello Sadat Chicken Wholesale,
+
+I would like to place an order:
+
+Product: Skinless Chicken Breast Boneless
+Quantity: 10 KG
+Price: To Be Confirmed
+
+Please confirm availability, wholesale pricing, and delivery details.
+
+Thank you."
+
+Use the WhatsApp Click-to-Chat API:
+
+`https://wa.me/923492355072?text=ENCODED_MESSAGE`
+
+Keep the business WhatsApp number configurable in one central settings file. Do not invent a phone number.
+
+7. Wholesale Pricing & Quantity System
+
+Support:
+after order reply total cost according to the item and quantity
+
+8. Navigation Header
+
+Create a sticky professional navigation bar containing:
+
+- Sadat Chicken Wholesale logo
+- Home
+- Products
+- Wholesale Orders
+- About Us
+- Contact Us
+- Search icon
+- Shopping cart icon
+- WhatsApp button
+
+On mobile, use a smooth animated hamburger menu.
+
+9. Homepage Hero Section
+
+Create an eye-catching hero section featuring fresh chicken meat imagery and premium typography.
+
+Main Heading:
+"Premium Fresh Chicken — Wholesale & Retail"
+
+Subheading:
+"Quality You Can Trust. Freshness You Can Taste."
+
+Buttons:
+- Explore Products
+- Get Wholesale Quote
+
+Add professional visual elements and subtle motion effects.
+
+10. Product Management
+
+Build the product catalog so a nontechnical owner can easily update:
+
+- Product name
+- Product image
+- Description
+- Category
+- Unit
+- Price
+- Stock availability
+- Featured status
+
+For the initial GitHub Pages version, use a structured local JSON or TypeScript data file.
+
+Do not pretend there is a live admin dashboard or persistent database unless one is actually implemented.
+
+11. SEO & Performance
+
+Implement:
+- Search-engine-friendly metadata
+- Open Graph tags
+- Semantic HTML
+- Product structured data where appropriate
+- Image alt text
+- Lazy-loaded images
+- Optimized images
+- Responsive design
+- Sitemap
+- Robots.txt
+- Fast page loading
+- Accessibility best practices
+
+12. Footer
+
+Create a professional multi-column footer:
+
+Sadat Chicken Wholesale
+
+"Freshness, Quality & Trust in Every Order."
+
+Include:
+- Quick links
+- Product categories
+- Wholesale inquiries
+- Contact details
+- WhatsApp contact
+- Social media links when provided
+- Copyright with dynamic year
+
+Developer Portfolio Link https://murtuzadeveloper.github.io/
+
+13. Extra Premium Features
+
+Add:
+- Floating WhatsApp button
+- Back-to-top button
+- Animated product cards
+- Product search and filtering
+- Shopping cart item counter
+- Quantity controls
+- Product availability labels
+- Wholesale quotation form
+- Empty cart state
+- Toast notifications
+- Mobile-friendly bottom action bar where useful
+- Loading skeletons
+- Error handling
+- Smooth transitions
+
+14. Functional Requirements
+
+Every button and feature must work correctly.
+
+Avoid:
+- Broken links
+- Nonfunctional buttons
+- Placeholder links that appear functional
+- Repeated or incorrect product images
+- Fake customer reviews
+- Fake prices
+- Unnecessary paid dependencies
+- Hardcoded contact information
+
+Use configurable business settings.
+
+15. GitHub Pages Deployment
+
+The final website must be fully deployable to GitHub Pages.
+
+Provide:
+1. Complete source code
+2. Organized project folder structure
+3. Installation instructions
+4. Local development commands
+5. Production build configuration
+6. GitHub Pages deployment workflow
+7. README.md
+8. Instructions to update products, images, prices, and WhatsApp number
+
+Configure the correct Vite base path for the repository and ensure client-side routing works on GitHub Pages, including direct navigation and page refreshes.
+
+16. Quality Assurance
+Before completion:
+- Verify responsive layouts on desktop, tablet, and mobile.
+- Test every navigation link.
+- Test search and category filters.
+- Test cart calculations.
+- Test WhatsApp checkout with URL-encoded messages.
+- Test empty states.
+- Test unavailable pricing.
+- Test the production build.
+- Verify GitHub Pages compatibility.
+- Check for console errors and broken images.
+
+FINAL INSTRUCTION
+Act as a senior full-stack developer, UI/UX designer, and e-commerce solutions architect.
+Build the complete working website, not just a design mockup.
+Prioritize premium visual quality, clean architecture, realistic chicken product photography, usability, and practical wholesale ordering.
+The final result should feel like a modern, trustworthy Pakistani chicken wholesale distribution business, ready to present to customers and commercial buyers.
+Brand Name: SADAT CHICKEN WHOLESALE
+Business Model: B2B Wholesale + B2C Retail
+Currency: PKR
+Primary Ordering Channel: +92 349 2355072
+
+Deliver a professional, responsive, production-ready website with functional ordering features.
+Also responsive for mobile and web 
+
+Fix these Logo and products are in C:\Users\murtu\OneDrive\Desktop\SADAT Chicken\Assests 
+
+Company Logo SADAT Chicken Wholesale Logo
+Products are 
+1. SkinLess Chicken Wing Tip
+2. SkinLess Chicken Mid-Joint Wing
+3. SkinLess Chicken Drumette
+4. SkinLess Chicken Neck
+5. SkinLess Chicken Whole Leg
+6. SkinLess Chicken Breast Boneless
+7. SkinLess Chicken 3-Joint Wing
+8. SkinLess Chicken Forequarter (Brease and Wing)
+9. SkinLess Chicken Leg Quarter With Bak Bone
+10. SkinLess Chicken Thigh
+11. SkinLess Chicken DrumStick
+12. SkinLess Chicken Heart
+13. SkinLess Chicken Liver
+14. SkinLess Chicken Gizzard
+15. SkinLess Chicken Feet
+16. SkinLess Chicken Meat
+17. SkinLess Chicken Whole
+
+Live Visitor Statistics System
+The website features a live visitor traffic analytics section in the footer tracking 4 metrics:
+1. Total Visitors: All-time deduplicated unique visitors (identified via an anonymous browser UUID in `localStorage`).
+2. Today's Visitors: Unique visitors today, reset automatically at `Timer` 
+3. Online Visitors: Currently active visitors calculated within a 5-seconds activity window.
+4. Total Page Views: Total visits to the wholesale catalog.
+
+Architecture & Configuration (`visitor-counter-config.js`)
+Zero-Setup Mode (Default)**: Out-of-the-box tracking using CountAPI (`https://countapi.mileshilliard.com/api/v1`) with local session presence. No API keys or backend servers required.
+Firebase Realtime Database Mode (Optional Free Tier): For multi-device, multi-user WebSocket live presence sync, simply paste your free Google Firebase Realtime Database configuration into `visitor-counter-config.js`.
