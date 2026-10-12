@@ -159,21 +159,36 @@ export default function ProductDetailPage({ onQuickView }) {
                   <span className="text-xs font-bold text-neutral-700 font-heading">
                     Select Quantity (KG):
                   </span>
-                  <div className="flex items-center border border-neutral-300 rounded-xl overflow-hidden bg-white shadow-sm">
+                  <div className="flex items-center border border-neutral-300 rounded-xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-burgundy/20 focus-within:border-burgundy">
                     <button
                       type="button"
-                      onClick={() => setQuantity(Math.max(product.minOrderKg || 5, quantity - 5))}
-                      className="p-2 hover:bg-neutral-100 text-neutral-700 transition-colors"
+                      onClick={() => setQuantity(Math.max(1, quantity - 5))}
+                      className="p-2 sm:p-2.5 hover:bg-neutral-100 text-neutral-700 transition-colors"
+                      aria-label="Decrease quantity"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="px-4 text-sm font-extrabold text-charcoal font-heading">
-                      {quantity} {product.unit}
-                    </span>
+                    <div className="flex items-center px-2 bg-neutral-50/50">
+                      <input
+                        type="number"
+                        min="1"
+                        max="9999"
+                        value={quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          setQuantity(isNaN(val) ? 1 : Math.max(1, val));
+                        }}
+                        className="w-16 text-center text-sm font-extrabold text-charcoal bg-transparent focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        title="Insert quantity in KG manually"
+                        aria-label="Quantity in KG"
+                      />
+                      <span className="text-xs font-bold text-neutral-600 select-none pr-1">KG</span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setQuantity(quantity + 5)}
-                      className="p-2 hover:bg-neutral-100 text-neutral-700 transition-colors"
+                      className="p-2 sm:p-2.5 hover:bg-neutral-100 text-neutral-700 transition-colors"
+                      aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

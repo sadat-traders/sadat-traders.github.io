@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Trash2, 
@@ -11,7 +11,8 @@ import {
   Phone, 
   AlertCircle,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  ChevronLeft
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { BUSINESS_CONFIG } from '../../config/businessConfig';
@@ -27,12 +28,32 @@ export default function CartDrawer() {
     updateQuantity, 
     removeFromCart, 
     clearCart, 
-    cartTotalPkr, 
-    isTotalCalculable,
     proceedToWhatsAppCheckout
   } = useCart();
 
   const [validationError, setValidationError] = useState('');
+
+  // Close Cart on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isCartOpen) {
+        setIsCartOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen, setIsCartOpen]);
+
+  // Lock background body scrolling when Cart Drawer is open
+  useEffect(() => {
+    if (isCartOpen) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = orig;
+      };
+    }
+  }, [isCartOpen]);
 
   if (!isCartOpen) return null;
 
@@ -72,37 +93,49 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Backdrop */}
+      {/* Backdrop with blur & smooth click to close */}
       <div 
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-black/65 backdrop-blur-sm transition-opacity"
         onClick={() => setIsCartOpen(false)}
+        aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full">
+      {/* Cart Container: Full screen (w-full pl-0) on Cellphone Screens, max-w-md to max-w-lg on Computer Screens */}
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 w-full justify-end">
+        <div className="w-full sm:max-w-md md:max-w-lg bg-white shadow-2xl flex flex-col h-full border-l border-neutral-200">
           
-          {/* Header */}
-          <div className="p-5 bg-charcoal text-white flex items-center justify-between border-b border-neutral-800">
+          {/* Header Bar */}
+          <div className="px-4 sm:px-6 py-4 bg-charcoal text-white flex items-center justify-between border-b border-neutral-800 shrink-0">
             <div className="flex items-center gap-2.5">
-              <ShoppingBag className="w-5 h-5 text-gold" />
+              <div className="w-8 h-8 rounded-lg bg-burgundy/30 border border-burgundy flex items-center justify-center text-gold">
+                <ShoppingBag className="w-4 h-4" />
+              </div>
               <div>
-                <h3 className="font-heading font-bold text-base">Wholesale Order Cart</h3>
-                <p className="text-xs text-neutral-400">Sadat Chicken Direct Order Desk</p>
+                <h3 className="font-heading font-bold text-sm sm:text-base leading-tight">
+                  Wholesale Order Cart
+                </h3>
+                <p className="text-[11px] text-neutral-400">
+                  Sadat Chicken Direct Order Desk
+                </p>
               </div>
             </div>
+
+            {/* Close Cart Button */}
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-              aria-label="Close cart"
+              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              aria-label="Close cart drawer"
+              title="Close Cart (Esc)"
             >
+              <span className="hidden sm:inline">Close</span>
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Cart Items List */}
-          <div className="flex-1 overflow-y-auto p-5 divide-y divide-neutral-100">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 divide-y divide-neutral-100">
             {cartItems.length === 0 ? (
-              <div className="py-16 flex flex-col items-center justify-center text-center">
+              <div className="py-16 sm:py-20 flex flex-col items-center justify-center text-center">
                 <div className="w-20 h-20 rounded-full bg-cream flex items-center justify-center mb-4 border border-burgundy/10">
                   <ShoppingBag className="w-10 h-10 text-burgundy/40" />
                 </div>
@@ -112,7 +145,7 @@ export default function CartDrawer() {
                 </p>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="bg-burgundy hover:bg-burgundy-800 text-white font-medium text-xs px-5 py-2.5 rounded-full shadow transition-colors"
+                  className="bg-burgundy hover:bg-burgundy-800 text-white font-medium text-xs px-6 py-3 rounded-full shadow transition-colors"
                 >
                   Browse Products
                 </button>
@@ -120,12 +153,14 @@ export default function CartDrawer() {
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-2 text-xs text-neutral-500">
-                  <span>{cartItems.length} Products Selected</span>
+                  <span className="font-medium text-neutral-700">
+                    {cartItems.length} Products Selected ({cartItems.reduce((acc, i) => acc + i.quantity, 0)} KG Total)
+                  </span>
                   <button 
                     onClick={clearCart} 
-                    className="text-red-600 hover:text-red-700 font-medium hover:underline flex items-center gap-1"
+                    className="text-red-600 hover:text-red-700 font-semibold hover:underline flex items-center gap-1"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Clear Cart
+                    <Trash2 className="w-3.5 h-3.5" /> Clear All
                   </button>
                 </div>
 
@@ -134,39 +169,58 @@ export default function CartDrawer() {
                     <img 
                       src={item.image} 
                       alt={item.name} 
-                      className="w-16 h-16 object-contain rounded-lg border border-neutral-200 bg-cream/40 p-1 shrink-0"
+                      className="w-16 h-16 sm:w-18 sm:h-18 object-contain rounded-xl border border-neutral-200 bg-cream/40 p-1 shrink-0"
                       onError={(e) => {
                         e.currentTarget.src = './assets/logo.png';
                       }}
                     />
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-neutral-800 truncate font-heading">
+                      <h4 className="text-xs sm:text-sm font-bold text-neutral-900 truncate font-heading" title={item.name}>
                         {item.name}
                       </h4>
-                      <p className="text-xs text-neutral-500 mt-0.5">
+                      <p className="text-[11px] text-neutral-500 mt-0.5">
                         Rate: Confirmed on WhatsApp
                       </p>
 
-                      {/* Quantity Selector */}
+                      {/* Manual Numeric Quantity Stepper */}
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="inline-flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-neutral-50">
+                        <div className="inline-flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-neutral-50 focus-within:ring-1 focus-within:ring-burgundy focus-within:border-burgundy">
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                            className="p-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
+                            className="p-1 sm:p-1.5 hover:bg-neutral-200 text-neutral-600 transition-colors"
                             aria-label="Decrease quantity"
+                            title="Decrease 1 KG"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="px-2.5 py-0.5 text-xs font-bold text-neutral-800">
-                            {item.quantity} {item.unit}
-                          </span>
+                          
+                          <div className="flex items-center bg-white px-1">
+                            <input
+                              type="number"
+                              min="1"
+                              max="9999"
+                              value={item.quantity}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                updateQuantity(item.id, isNaN(val) ? 1 : Math.max(1, val));
+                              }}
+                              className="w-12 text-center text-xs font-extrabold text-neutral-800 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              title="Type quantity in KG manually"
+                              aria-label={`Quantity for ${item.name}`}
+                            />
+                            <span className="text-[10px] font-semibold text-neutral-500 pr-1 select-none">
+                              {item.unit || 'KG'}
+                            </span>
+                          </div>
+
                           <button
                             type="button"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
+                            className="p-1 sm:p-1.5 hover:bg-neutral-200 text-neutral-600 transition-colors"
                             aria-label="Increase quantity"
+                            title="Increase 1 KG"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -180,8 +234,9 @@ export default function CartDrawer() {
 
                     <button
                       onClick={() => removeFromCart(item.id)}
-                      className="text-neutral-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                      className="text-neutral-400 hover:text-red-500 p-1.5 rounded-lg transition-colors"
                       title="Remove cut"
+                      aria-label="Remove item"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -217,7 +272,7 @@ export default function CartDrawer() {
                       placeholder="e.g. Tariq Ahmed / Al-Bake Restaurant"
                       value={customerInfo.name}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                      className="w-full text-xs px-3 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
                       required
                     />
                   </div>
@@ -231,7 +286,7 @@ export default function CartDrawer() {
                       placeholder="e.g. Shop #4, Commercial Area, Karachi"
                       value={customerInfo.location}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, location: e.target.value })}
-                      className="w-full text-xs px-3 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
                       required
                     />
                   </div>
@@ -245,7 +300,7 @@ export default function CartDrawer() {
                       placeholder="e.g. 0349 2355072"
                       value={customerInfo.phone}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                      className="w-full text-xs px-3 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
                     />
                   </div>
 
@@ -258,7 +313,7 @@ export default function CartDrawer() {
                       placeholder="e.g. Need 10 KG packets, deliver before 12 PM"
                       value={customerInfo.notes}
                       onChange={(e) => setCustomerInfo({ ...customerInfo, notes: e.target.value })}
-                      className="w-full text-xs px-3 py-2 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy resize-none"
+                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy resize-none"
                     />
                   </div>
                 </div>
@@ -266,10 +321,10 @@ export default function CartDrawer() {
             )}
           </div>
 
-          {/* Footer Summary & WhatsApp Order Checkout */}
+          {/* Footer Summary & Actions */}
           {cartItems.length > 0 && (
-            <div className="p-5 bg-neutral-50 border-t border-neutral-200 shadow-lg">
-              <div className="space-y-1.5 mb-4 text-xs">
+            <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-200 shadow-lg shrink-0">
+              <div className="space-y-1.5 mb-3.5 text-xs">
                 <div className="flex justify-between text-neutral-600">
                   <span>Total Order Volume:</span>
                   <span className="font-semibold text-neutral-800">
@@ -286,11 +341,12 @@ export default function CartDrawer() {
                     Quoted on WhatsApp
                   </span>
                 </div>
-                <p className="text-[10px] text-neutral-500 pt-1">
+                <p className="text-[10px] text-neutral-500 pt-0.5">
                   *After placing your order, we will reply with the exact total cost according to the items, cuts, and quantities selected.
                 </p>
               </div>
 
+              {/* Primary WhatsApp Checkout Button */}
               <button
                 type="button"
                 onClick={handleCheckout}
@@ -301,9 +357,20 @@ export default function CartDrawer() {
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <div className="mt-3 flex items-center justify-center gap-2 text-[11px] text-neutral-500">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Direct dispatch to +92 349 2355072</span>
+              {/* Close / Continue Shopping Button */}
+              <div className="mt-2.5 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(false)}
+                  className="text-xs font-semibold text-neutral-600 hover:text-burgundy flex items-center gap-1 py-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Continue Shopping
+                </button>
+
+                <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>+92 349 2355072</span>
+                </div>
               </div>
             </div>
           )}

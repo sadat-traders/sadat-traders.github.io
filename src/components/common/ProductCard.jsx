@@ -110,24 +110,39 @@ export default function ProductCard({ product, onQuickView }) {
               </div>
             </div>
 
-            {/* Quick KG Selector */}
-            <div className="flex items-center border border-neutral-200 rounded-lg overflow-hidden bg-neutral-50">
+            {/* Quick KG Selector with Manual Input */}
+            <div className="flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-neutral-50 focus-within:ring-1 focus-within:ring-burgundy focus-within:border-burgundy">
               <button
                 type="button"
-                onClick={() => setSelectedKg(Math.max(product.minOrderKg || 5, selectedKg - 5))}
-                className="p-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
+                onClick={() => setSelectedKg(Math.max(1, selectedKg - 5))}
+                className="px-2 py-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
                 title="Decrease 5 KG"
+                aria-label="Decrease quantity"
               >
                 <Minus className="w-3 h-3" />
               </button>
-              <span className="px-2 text-xs font-bold text-neutral-800">
-                {selectedKg} KG
-              </span>
+              <div className="flex items-center bg-white px-1">
+                <input
+                  type="number"
+                  min="1"
+                  max="9999"
+                  value={selectedKg}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setSelectedKg(isNaN(val) ? 1 : Math.max(1, val));
+                  }}
+                  className="w-10 text-center text-xs font-bold text-neutral-800 focus:outline-none py-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  title="Insert quantity in KG manually"
+                  aria-label="Quantity in KG"
+                />
+                <span className="text-[10px] font-semibold text-neutral-500 pr-1 select-none">KG</span>
+              </div>
               <button
                 type="button"
                 onClick={() => setSelectedKg(selectedKg + 5)}
-                className="p-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
+                className="px-2 py-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
                 title="Increase 5 KG"
+                aria-label="Increase quantity"
               >
                 <Plus className="w-3 h-3" />
               </button>
