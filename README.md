@@ -156,13 +156,15 @@ The compiled output is located in the `dist/` directory, ready to be hosted on a
 2. Link your GitHub repository:
    ```bash
    git branch -M main
-   git remote add origin https://github.com/murtuzakhalid7-hash/<repo-name>.git
+   git remote add origin https://github.com/sadat-traders/sadat-traders.github.io.git
    git push -u origin main
    ```
-3. In your GitHub repository:
+3. Live URL:
+   **https://sadat-traders.github.io/**
+4. In your GitHub repository:
    - Go to **Settings** > **Pages**.
-   - Under **Build and deployment**, set **Source** to **GitHub Actions**.
-4. The workflow in `.github/workflows/deploy.yml` will automatically build and publish your site!
+   - Under **Build and deployment**, **Source** is set to **GitHub Actions**.
+   - The workflow in `.github/workflows/deploy.yml` automatically builds and publishes your site!
 
 ---
 
