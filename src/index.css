@@ -71,3 +71,14 @@
   background-size: 200% 100%;
   animation: shimmer 1.8s infinite;
 }
+
+/* Hide scrollbar utilities */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

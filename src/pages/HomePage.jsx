@@ -62,15 +62,26 @@ const HERO_SHOWCASE_CUTS = [
 
 export default function HomePage({ onQuickView }) {
   const [activeHeroIdx, setActiveHeroIdx] = useState(0);
+  const [isAutoPlayPaused, setIsAutoPlayPaused] = useState(false);
   const featuredProducts = PRODUCTS.filter(p => p.isFeatured).slice(0, 6);
 
-  // Auto-rotate hero cuts every 4.5 seconds for dynamic presentation
+  // Auto-rotate hero cuts every 4.5 seconds for dynamic presentation (pauses on user interaction)
   useEffect(() => {
+    if (isAutoPlayPaused) return;
     const timer = setInterval(() => {
       setActiveHeroIdx(prev => (prev + 1) % HERO_SHOWCASE_CUTS.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [isAutoPlayPaused]);
+
+  const handleSelectHeroCut = (idx) => {
+    setActiveHeroIdx(idx);
+    setIsAutoPlayPaused(true);
+    if (window.__heroResumeTimer) clearTimeout(window.__heroResumeTimer);
+    window.__heroResumeTimer = setTimeout(() => {
+      setIsAutoPlayPaused(false);
+    }, 10000);
+  };
 
   const currentHeroCut = HERO_SHOWCASE_CUTS[activeHeroIdx];
   const activeProduct = PRODUCTS.find(p => p.id === currentHeroCut.id) || PRODUCTS[0];
@@ -198,7 +209,11 @@ export default function HomePage({ onQuickView }) {
 
             {/* Right Column: Hero Visual Showcase (Responsive & Interactive) */}
             <div className="lg:col-span-5 relative flex justify-center w-full">
-              <div className="relative w-full max-w-md lg:max-w-lg bg-gradient-to-tr from-charcoal-card via-charcoal to-[#22070d] border border-burgundy/40 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between overflow-hidden group">
+              <div 
+                onMouseEnter={() => setIsAutoPlayPaused(true)}
+                onMouseLeave={() => setIsAutoPlayPaused(false)}
+                className="relative w-full max-w-md lg:max-w-lg bg-gradient-to-tr from-charcoal-card via-charcoal to-[#22070d] border border-burgundy/40 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between overflow-hidden group"
+              >
                 
                 {/* Ambient dynamic radial glow behind chicken */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-burgundy/25 rounded-full blur-3xl pointer-events-none"></div>
@@ -228,7 +243,11 @@ export default function HomePage({ onQuickView }) {
                     alt={currentHeroCut.name}
                     className="max-w-full max-h-full object-contain filter drop-shadow-2xl animate-float transition-all duration-500"
                     onError={(e) => {
-                      if (currentHeroCut.fallback) e.currentTarget.src = currentHeroCut.fallback;
+                      if (currentHeroCut.fallback && e.currentTarget.src !== currentHeroCut.fallback) {
+                        e.currentTarget.src = currentHeroCut.fallback;
+                      } else {
+                        e.currentTarget.src = './assets/logo.png';
+                      }
                     }}
                   />
 
@@ -256,27 +275,29 @@ export default function HomePage({ onQuickView }) {
                     {currentHeroCut.subtitle}
                   </p>
 
-                  {/* Interactive Switcher Thumbnails */}
-                  <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-center gap-2 overflow-x-auto py-1">
-                    {HERO_SHOWCASE_CUTS.map((cut, idx) => {
-                      const isActive = activeHeroIdx === idx;
-                      return (
-                        <button
-                          key={cut.id}
-                          type="button"
-                          onClick={() => setActiveHeroIdx(idx)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all ${
-                            isActive
-                              ? 'bg-burgundy text-white border border-gold shadow-md scale-105'
-                              : 'bg-black/40 hover:bg-black/60 text-neutral-300 border border-white/10'
-                          }`}
-                          title={`Switch to ${cut.name}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-gold animate-pulse' : 'bg-neutral-500'}`}></span>
-                          <span className="truncate max-w-[85px] sm:max-w-none">{cut.tag}</span>
-                        </button>
-                      );
-                    })}
+                  {/* Interactive Switcher Buttons - Fully Visible, No Clipping, No Scrollbar */}
+                  <div className="mt-3 pt-3 border-t border-white/10 w-full">
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 w-full">
+                      {HERO_SHOWCASE_CUTS.map((cut, idx) => {
+                        const isActive = activeHeroIdx === idx;
+                        return (
+                          <button
+                            key={cut.id}
+                            type="button"
+                            onClick={() => handleSelectHeroCut(idx)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all select-none ${
+                              isActive
+                                ? 'bg-burgundy text-white border border-gold shadow-lg shadow-burgundy/40 scale-105'
+                                : 'bg-black/50 hover:bg-black/80 text-neutral-300 hover:text-white border border-white/10'
+                            }`}
+                            title={`Switch to ${cut.name}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-gold animate-pulse' : 'bg-neutral-500'}`}></span>
+                            <span className="whitespace-nowrap">{cut.tag}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
