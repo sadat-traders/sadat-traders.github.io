@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   X, 
   Trash2, 
@@ -24,6 +25,7 @@ import { getCurrentCoordinates } from '../../utils/geolocation';
 import confetti from 'canvas-confetti';
 
 export default function CartDrawer() {
+  const navigate = useNavigate();
   const { 
     cartItems, 
     customerInfo, 
@@ -159,6 +161,9 @@ export default function CartDrawer() {
     }
   };
 
+  // Do not render anything when cart is closed
+  if (!isCartOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop with blur & smooth click to close */}
@@ -190,8 +195,9 @@ export default function CartDrawer() {
 
             {/* Close Cart Button */}
             <button
+              type="button"
               onClick={() => setIsCartOpen(false)}
-              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
               aria-label="Close cart drawer"
               title="Close Cart (Esc)"
             >
@@ -212,8 +218,12 @@ export default function CartDrawer() {
                   Explore our premium skinless chicken cuts and bulk wholesale offerings.
                 </p>
                 <button
-                  onClick={() => setIsCartOpen(false)}
-                  className="bg-burgundy hover:bg-burgundy-800 text-white font-medium text-xs px-6 py-3 rounded-full shadow transition-colors"
+                  type="button"
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    navigate('/products');
+                  }}
+                  className="bg-burgundy hover:bg-burgundy-800 text-white font-medium text-xs px-6 py-3 rounded-full shadow transition-colors cursor-pointer"
                 >
                   Browse Products
                 </button>
