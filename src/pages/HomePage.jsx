@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
@@ -13,14 +13,67 @@ import {
   Utensils, 
   ShoppingBag, 
   Star,
-  Scale
+  Scale,
+  Eye,
+  Sparkles
 } from 'lucide-react';
 import { BUSINESS_CONFIG, getWhatsAppUrl } from '../config/businessConfig';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/common/ProductCard';
 
+const HERO_SHOWCASE_CUTS = [
+  {
+    id: 6,
+    name: "Skinless Chicken Breast Boneless",
+    subtitle: "Prime Double Fillet • Hand-Deboned • 0% Fat",
+    badge: "Most Demanded B2B Cut",
+    image: "./assets/products/skinless-chicken-breast-boneless.png",
+    fallback: "./assets/6. SkinLess Chicken Breast Bonless.png",
+    tag: "Boneless Breast"
+  },
+  {
+    id: 11,
+    name: "Skinless Chicken Drumstick",
+    subtitle: "Calibrated 100g-120g • Skinned Clean • High Yield",
+    badge: "Franchise & Family Favorite",
+    image: "./assets/products/skinless-chicken-drumstick.png",
+    fallback: "./assets/11. SkinLess Chicken DrumStick.png",
+    tag: "Drumsticks"
+  },
+  {
+    id: 2,
+    name: "Skinless Chicken Mid-Joint Wing",
+    subtitle: "Uniform Flats • Zero Feathers • Gourmet Grill",
+    badge: "Upscale Grill & Cafe Grade",
+    image: "./assets/products/skinless-chicken-mid-joint-wing.png",
+    fallback: "./assets/2. SkinLess Chicken Mid-Joint Wing.png",
+    tag: "Mid-Joint Wings"
+  },
+  {
+    id: 17,
+    name: "Skinless Whole Chicken",
+    subtitle: "1.0 - 1.4 KG • Clean Cavity • Chargha Ready",
+    badge: "Direct Whole Bird Supply",
+    image: "./assets/products/skinless-chicken-whole.png",
+    fallback: "./assets/17. SkinLess Chicken Whole.png",
+    tag: "Whole Bird"
+  }
+];
+
 export default function HomePage({ onQuickView }) {
+  const [activeHeroIdx, setActiveHeroIdx] = useState(0);
   const featuredProducts = PRODUCTS.filter(p => p.isFeatured).slice(0, 6);
+
+  // Auto-rotate hero cuts every 4.5 seconds for dynamic presentation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveHeroIdx(prev => (prev + 1) % HERO_SHOWCASE_CUTS.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentHeroCut = HERO_SHOWCASE_CUTS[activeHeroIdx];
+  const activeProduct = PRODUCTS.find(p => p.id === currentHeroCut.id) || PRODUCTS[0];
 
   const stats = [
     { label: "Monthly Wholesale Volume", value: "75,000+ KG", icon: TrendingUp },
@@ -143,39 +196,90 @@ export default function HomePage({ onQuickView }) {
               </div>
             </div>
 
-            {/* Right Column: Hero Visual Showcase */}
-            <div className="lg:col-span-5 relative flex justify-center">
-              <div className="relative w-full max-w-md aspect-square bg-gradient-to-tr from-charcoal-card to-charcoal border-2 border-burgundy/40 rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-center overflow-hidden group">
+            {/* Right Column: Hero Visual Showcase (Responsive & Interactive) */}
+            <div className="lg:col-span-5 relative flex justify-center w-full">
+              <div className="relative w-full max-w-md lg:max-w-lg bg-gradient-to-tr from-charcoal-card via-charcoal to-[#22070d] border border-burgundy/40 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col justify-between overflow-hidden group">
                 
-                {/* Floating badge */}
-                <div className="absolute top-4 right-4 bg-charcoal/90 border border-gold/40 text-gold text-xs font-bold px-3 py-1.5 rounded-xl shadow-lg backdrop-blur-md flex items-center gap-1.5">
-                  <Scale className="w-4 h-4 text-gold" />
-                  <span>Bulk 10 KG - 10,000 KG</span>
+                {/* Ambient dynamic radial glow behind chicken */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-burgundy/25 rounded-full blur-3xl pointer-events-none"></div>
+
+                {/* Top Bar inside showcase */}
+                <div className="flex items-center justify-between gap-2 z-10 mb-2">
+                  <span className="inline-flex items-center gap-1.5 bg-black/60 border border-neutral-700 text-emerald-400 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Fresh Chilled 0°C - 4°C
+                  </span>
+
+                  <span className="bg-charcoal/90 border border-gold/40 text-gold text-[10px] sm:text-xs font-bold px-3 py-1 rounded-xl shadow-lg backdrop-blur-md flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-gold" />
+                    <span>Bulk 10 KG - 10,000 KG</span>
+                  </span>
                 </div>
 
-                <div className="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center animate-float">
+                {/* Main Chicken Meat Photography Display */}
+                <div 
+                  onClick={() => onQuickView && onQuickView(activeProduct)}
+                  className="relative h-48 sm:h-60 md:h-64 flex items-center justify-center my-2 cursor-pointer z-10 transition-transform duration-500 hover:scale-105"
+                  title="Click to view full specifications"
+                >
                   <img
-                    src="./assets/products/skinless-chicken-breast-boneless.png"
-                    alt="Skinless Chicken Breast Boneless"
-                    className="max-w-full max-h-full object-contain filter drop-shadow-2xl"
+                    key={currentHeroCut.id}
+                    src={currentHeroCut.image}
+                    alt={currentHeroCut.name}
+                    className="max-w-full max-h-full object-contain filter drop-shadow-2xl animate-float transition-all duration-500"
                     onError={(e) => {
-                      e.currentTarget.src = './assets/6. SkinLess Chicken Breast Bonless.png';
+                      if (currentHeroCut.fallback) e.currentTarget.src = currentHeroCut.fallback;
                     }}
                   />
+
+                  {/* Hover Quick View Overlay Icon */}
+                  <div className="absolute bottom-2 right-2 bg-black/70 hover:bg-burgundy text-white p-2 rounded-xl backdrop-blur-md border border-white/10 opacity-80 hover:opacity-100 transition-all flex items-center gap-1.5 text-[11px] font-semibold">
+                    <Eye className="w-3.5 h-3.5 text-gold" />
+                    <span className="hidden sm:inline">View Specs</span>
+                  </div>
                 </div>
 
-                {/* Caption Card */}
-                <div className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mt-2 text-center">
-                  <span className="text-[11px] font-bold text-amber-300 uppercase tracking-widest block">
-                    Product Spotlight
-                  </span>
-                  <h3 className="font-heading font-extrabold text-white text-lg sm:text-xl">
-                    Skinless Chicken Breast Boneless
+                {/* Product Caption Info Card */}
+                <div className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 sm:p-4 mt-1 z-10 text-center">
+                  <div className="flex items-center justify-center gap-1.5 mb-1">
+                    <Sparkles className="w-3 h-3 text-gold" />
+                    <span className="text-[10px] sm:text-[11px] font-bold text-amber-300 uppercase tracking-widest">
+                      {currentHeroCut.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="font-heading font-extrabold text-white text-base sm:text-xl truncate">
+                    {currentHeroCut.name}
                   </h3>
-                  <p className="text-xs text-neutral-300 mt-0.5">
-                    Double Fillet • Hand-Deboned • Zero Fat Membrane
+
+                  <p className="text-[11px] sm:text-xs text-neutral-300 mt-0.5 line-clamp-1">
+                    {currentHeroCut.subtitle}
                   </p>
+
+                  {/* Interactive Switcher Thumbnails */}
+                  <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-center gap-2 overflow-x-auto py-1">
+                    {HERO_SHOWCASE_CUTS.map((cut, idx) => {
+                      const isActive = activeHeroIdx === idx;
+                      return (
+                        <button
+                          key={cut.id}
+                          type="button"
+                          onClick={() => setActiveHeroIdx(idx)}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold transition-all ${
+                            isActive
+                              ? 'bg-burgundy text-white border border-gold shadow-md scale-105'
+                              : 'bg-black/40 hover:bg-black/60 text-neutral-300 border border-white/10'
+                          }`}
+                          title={`Switch to ${cut.name}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-gold animate-pulse' : 'bg-neutral-500'}`}></span>
+                          <span className="truncate max-w-[85px] sm:max-w-none">{cut.tag}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
               </div>
             </div>
 
