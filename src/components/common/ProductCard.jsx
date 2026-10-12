@@ -110,13 +110,13 @@ export default function ProductCard({ product, onQuickView }) {
               </div>
             </div>
 
-            {/* Quick KG Selector with Manual Input */}
+            {/* Quick KG Selector with Manual Input (+1 Increment) */}
             <div className="flex items-center border border-neutral-300 rounded-lg overflow-hidden bg-neutral-50 focus-within:ring-1 focus-within:ring-burgundy focus-within:border-burgundy">
               <button
                 type="button"
-                onClick={() => setSelectedKg(Math.max(1, selectedKg - 5))}
+                onClick={() => setSelectedKg(Math.max(1, selectedKg - 1))}
                 className="px-2 py-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
-                title="Decrease 5 KG"
+                title="Decrease 1 KG (-1)"
                 aria-label="Decrease quantity"
               >
                 <Minus className="w-3 h-3" />
@@ -139,9 +139,9 @@ export default function ProductCard({ product, onQuickView }) {
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedKg(selectedKg + 5)}
+                onClick={() => setSelectedKg(selectedKg + 1)}
                 className="px-2 py-1 hover:bg-neutral-200 text-neutral-600 transition-colors"
-                title="Increase 5 KG"
+                title="Increase 1 KG (+1)"
                 aria-label="Increase quantity"
               >
                 <Plus className="w-3 h-3" />

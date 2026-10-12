@@ -223,13 +223,13 @@ export default function ProductDetailModal({ product, onClose, onSelectProduct }
                     </span>
                   </div>
                   
-                  {/* Manual Numeric Input + Quick Buttons */}
+                  {/* Manual Numeric Input + Quick Buttons (+1 Increment) */}
                   <div className="flex items-center border border-neutral-300 rounded-xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-burgundy/20 focus-within:border-burgundy">
                     <button
                       type="button"
-                      onClick={() => setQuantity(Math.max(1, quantity - 5))}
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
                       className="p-2 sm:p-2.5 hover:bg-neutral-100 text-neutral-700 transition-colors"
-                      title="Decrease 5 KG"
+                      title="Decrease 1 KG (-1)"
                       aria-label="Decrease quantity"
                     >
                       <Minus className="w-4 h-4" />
@@ -251,9 +251,9 @@ export default function ProductDetailModal({ product, onClose, onSelectProduct }
 
                     <button
                       type="button"
-                      onClick={() => setQuantity(quantity + 5)}
+                      onClick={() => setQuantity(quantity + 1)}
                       className="p-2 sm:p-2.5 hover:bg-neutral-100 text-neutral-700 transition-colors"
-                      title="Increase 5 KG"
+                      title="Increase 1 KG (+1)"
                       aria-label="Increase quantity"
                     >
                       <Plus className="w-4 h-4" />

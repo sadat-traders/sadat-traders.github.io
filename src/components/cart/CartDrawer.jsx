@@ -190,8 +190,8 @@ export default function CartDrawer() {
                             type="button"
                             onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
                             className="p-1 sm:p-1.5 hover:bg-neutral-200 text-neutral-600 transition-colors"
-                            aria-label="Decrease quantity"
-                            title="Decrease 1 KG"
+                            aria-label="Decrease quantity by 1"
+                            title="Decrease 1 KG (-1)"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -219,8 +219,8 @@ export default function CartDrawer() {
                             type="button"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="p-1 sm:p-1.5 hover:bg-neutral-200 text-neutral-600 transition-colors"
-                            aria-label="Increase quantity"
-                            title="Increase 1 KG"
+                            aria-label="Increase quantity by 1"
+                            title="Increase 1 KG (+1)"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
