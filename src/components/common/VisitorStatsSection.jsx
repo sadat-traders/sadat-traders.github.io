@@ -3,7 +3,7 @@ import { Users, Eye, Activity, Calendar, ShieldCheck } from 'lucide-react';
 import { useVisitorStats } from '../../context/VisitorContext';
 
 export default function VisitorStatsSection() {
-  const { totalVisitors, todayVisitors, onlineVisitors, totalPageViews } = useVisitorStats();
+  const { totalVisitors, todayVisitors, onlineVisitors, totalPageViews, activeMode } = useVisitorStats();
 
   const statsCards = [
     {
@@ -61,7 +61,10 @@ export default function VisitorStatsSection() {
           </div>
           <div className="flex items-center gap-2 text-xs text-neutral-400">
             <ShieldCheck className="w-4 h-4 text-gold" />
-            <span>Real-time presence tracking • Zero-setup & Firebase enabled</span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              {activeMode === 'firebase' ? 'Firebase Realtime WebSocket Synced' : 'CountAPI Zero-Setup Mode'} • Compatible with GitHub Pages
+            </span>
           </div>
         </div>
 
