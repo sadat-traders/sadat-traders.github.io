@@ -7,6 +7,10 @@ import {
   ShoppingBag, 
   MessageCircle, 
   MapPin, 
+  Navigation,
+  CheckCircle2,
+  Loader2,
+  ExternalLink,
   User, 
   Phone, 
   AlertCircle,
@@ -16,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { BUSINESS_CONFIG } from '../../config/businessConfig';
+import { getCurrentCoordinates } from '../../utils/geolocation';
 import confetti from 'canvas-confetti';
 
 export default function CartDrawer() {
@@ -32,6 +37,10 @@ export default function CartDrawer() {
   } = useCart();
 
   const [validationError, setValidationError] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [locationError, setLocationError] = useState('');
+  const [coordinates, setCoordinates] = useState(null);
 
   // Close Cart on Escape key press
   useEffect(() => {
@@ -55,10 +64,52 @@ export default function CartDrawer() {
     }
   }, [isCartOpen]);
 
-  if (!isCartOpen) return null;
+  /**
+   * Helper to fetch current GPS coordinates
+   * @param {boolean} silent - Whether to hide explicit error warnings in UI
+   */
+  const handleFetchCurrentLocation = async (silent = false) => {
+    setIsLocating(true);
+    if (!silent) setLocationError('');
 
-  const handleCheckout = (e) => {
-    e.preventDefault();
+    try {
+      const result = await getCurrentCoordinates({ timeout: 6000, enableHighAccuracy: true });
+      setIsLocating(false);
+
+      if (result.success) {
+        setCoordinates({ lat: result.latitude, lng: result.longitude });
+        setLocationError('');
+
+        setCustomerInfo(prev => ({
+          ...prev,
+          gpsUrl: result.mapsUrl,
+          location: prev.location && prev.location.trim().length > 0 
+            ? prev.location 
+            : `Current GPS Location (${result.latitude.toFixed(4)}, ${result.longitude.toFixed(4)})`
+        }));
+
+        return result.mapsUrl;
+      } else {
+        if (!silent) {
+          setLocationError(result.error || 'Unable to retrieve your current GPS location.');
+        }
+        return null;
+      }
+    } catch (err) {
+      setIsLocating(false);
+      if (!silent) {
+        setLocationError('Failed to retrieve location. Please type your address manually.');
+      }
+      return null;
+    }
+  };
+
+  /**
+   * Handles checkout: validates fields, fetches current location if not yet attached,
+   * and opens WhatsApp with order details and Google Maps location pin.
+   */
+  const handleCheckout = async (e) => {
+    if (e) e.preventDefault();
     setValidationError('');
 
     if (cartItems.length === 0) {
@@ -71,7 +122,23 @@ export default function CartDrawer() {
       return;
     }
 
-    if (!customerInfo.location || customerInfo.location.trim().length < 4) {
+    setIsPlacingOrder(true);
+
+    // If GPS location URL is not already attached, fetch current location before placing order
+    let finalGpsUrl = customerInfo.gpsUrl;
+    if (!finalGpsUrl) {
+      try {
+        finalGpsUrl = await handleFetchCurrentLocation(true);
+      } catch (err) {
+        // Proceed gracefully without blocking the customer
+        finalGpsUrl = null;
+      }
+    }
+
+    // Check delivery location: if empty but GPS was found, set default note
+    const currentLocationText = customerInfo.location?.trim() || "";
+    if (!currentLocationText && !finalGpsUrl) {
+      setIsPlacingOrder(false);
       setValidationError("Please enter your Complete Delivery Location (Required to confirm dispatch).");
       return;
     }
@@ -85,7 +152,8 @@ export default function CartDrawer() {
       });
     } catch (err) {}
 
-    const success = proceedToWhatsAppCheckout();
+    const success = proceedToWhatsAppCheckout(finalGpsUrl);
+    setIsPlacingOrder(false);
     if (success) {
       setIsCartOpen(false);
     }
@@ -278,17 +346,87 @@ export default function CartDrawer() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-neutral-600 mb-1">
-                      Delivery Location & City <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Shop #4, Commercial Area, Karachi"
-                      value={customerInfo.location}
-                      onChange={(e) => setCustomerInfo({ ...customerInfo, location: e.target.value })}
-                      className="w-full text-xs sm:text-sm px-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
-                      required
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-semibold text-neutral-600">
+                        Delivery Location & City <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleFetchCurrentLocation(false)}
+                        disabled={isLocating || isPlacingOrder}
+                        className="text-[11px] font-semibold text-burgundy hover:text-burgundy-800 flex items-center gap-1 transition-colors disabled:opacity-50"
+                        title="Auto-detect current GPS coordinates"
+                      >
+                        {isLocating ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin text-burgundy" />
+                            <span>Detecting GPS...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Navigation className="w-3 h-3 text-burgundy" />
+                            <span>Use Current Location</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="e.g. Shop #4, Commercial Area, Karachi"
+                        value={customerInfo.location}
+                        onChange={(e) => setCustomerInfo({ ...customerInfo, location: e.target.value })}
+                        className="w-full text-xs sm:text-sm pl-8 pr-3.5 py-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-1 focus:ring-burgundy focus:border-burgundy"
+                        required
+                      />
+                      <MapPin className="w-4 h-4 text-neutral-400 absolute left-2.5 top-3 pointer-events-none" />
+                    </div>
+
+                    {/* Active GPS Pin Badge */}
+                    {customerInfo.gpsUrl && (
+                      <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between text-xs animate-in fade-in">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <div className="truncate">
+                            <span className="font-bold text-emerald-900">GPS Map Pin Attached:</span>{" "}
+                            <span className="text-emerald-700 text-[11px]">
+                              {coordinates ? `${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)}` : "Live Location"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <a
+                            href={customerInfo.gpsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 underline flex items-center gap-0.5"
+                          >
+                            <span>View Pin</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomerInfo({ ...customerInfo, gpsUrl: '' });
+                              setCoordinates(null);
+                            }}
+                            className="text-neutral-400 hover:text-red-600 p-0.5 rounded"
+                            title="Remove attached GPS pin"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Location Error notice if any */}
+                    {locationError && (
+                      <div className="mt-1.5 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                        <span>{locationError}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -350,11 +488,21 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group text-sm"
+                disabled={isPlacingOrder}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-75 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group text-sm"
               >
-                <MessageCircle className="w-5 h-5 fill-white" />
-                <span>Place Order on WhatsApp</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                {isPlacingOrder ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Fetching Location & Placing Order...</span>
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="w-5 h-5 fill-white" />
+                    <span>Place Order on WhatsApp</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
 
               {/* Close / Continue Shopping Button */}

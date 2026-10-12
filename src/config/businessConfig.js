@@ -64,14 +64,14 @@ export function getWhatsAppUrl(message = "") {
 /**
  * Builds formatted WhatsApp message for single product inquiry
  */
-export function generateProductWhatsAppMessage(product, quantity = 1, unit = "KG") {
+export function generateProductWhatsAppMessage(product, quantity = 1, unit = "KG", gpsLocationUrl = "") {
   return `Hello ${BUSINESS_CONFIG.brandName},
 
 I would like to inquire about this product:
 
 Product: ${product.name}
 Quantity: ${quantity} ${unit}
-Price: Contact for Daily Wholesale Market Rate
+Price: Contact for Daily Wholesale Market Rate${gpsLocationUrl ? `\n• Location Map Pin: ${gpsLocationUrl}` : ""}
 
 Please confirm availability, wholesale pricing, and delivery details.
 
@@ -82,7 +82,7 @@ Thank you.`;
  * Builds formatted WhatsApp message for cart checkout
  * Mandatory fields: customerName, deliveryLocation
  */
-export function generateCartWhatsAppMessage({ items, customerName, deliveryLocation, contactPhone, notes }) {
+export function generateCartWhatsAppMessage({ items, customerName, deliveryLocation, contactPhone, notes, gpsLocationUrl }) {
   let itemList = items.map((item, idx) => {
     return `${idx + 1}. ${item.name}\n   - Quantity: ${item.quantity} ${item.unit || "KG"}`;
   }).join("\n\n");
@@ -95,7 +95,7 @@ I would like to place an order:
 
 *Customer Details:*
 • Name: ${customerName}
-• Delivery Location: ${deliveryLocation}
+• Delivery Location: ${deliveryLocation}${gpsLocationUrl ? `\n• GPS Map Pin: ${gpsLocationUrl}` : ""}
 • Phone: ${contactPhone || "Same as WhatsApp"}
 
 *Order Items:*

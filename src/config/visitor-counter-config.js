@@ -1,25 +1,16 @@
+
 /**
  * SADAT CHICKEN WHOLESALE
- * Compatible with GitHub Pages (Static Hosting)
- * This configuration supports two operating modes:
- *   1. "auto" / "firebase": Uses Google Firebase Realtime Database (100% free Spark plan)
- *      to provide full real-time WebSocket synchronization across all devices,
- *      including live concurrent active visitor presence and disconnect tracking.
- *   2. "countapi": Uses the free public CountAPI service (no keys or setup required)
- *      to immediately track Total Page Views, Total Unique Visitors, and Today's Unique Visitors.
- *
- * When Firebase credentials are provided below, the tracker automatically uses
- * Firebase Realtime Database for all 4 metrics. If empty, it smoothly operates in
- * CountAPI mode with zero configuration needed.
+ * Professional Real-Time Visitor Counter
+ * Compatible with GitHub Pages
  */
 
 export const VISITOR_COUNTER_CONFIG = {
-  // Operating mode: "auto" (auto-detects Firebase credentials, otherwise CountAPI),
-  // "firebase" (explicit Firebase mode), or "countapi" (explicit CountAPI mode)
+  // Operating mode
+  // auto | firebase | countapi
   mode: "auto",
 
-  // 1. Google Firebase Realtime Database Configuration (100% Free Spark Plan)
-  // For multi-device, multi-user WebSocket live presence sync, simply paste your credentials:
+  // Firebase Realtime Database
   firebase: {
     apiKey: "",
     authDomain: "",
@@ -30,21 +21,38 @@ export const VISITOR_COUNTER_CONFIG = {
     appId: ""
   },
 
-  // 2. CountAPI Service Configuration (Zero-setup mode, no API keys or backend servers required)
+  // CountAPI configuration
   countapi: {
     baseUrl: "https://countapi.mileshilliard.com/api/v1",
     namespace: "sadat-chicken-wholesale-v1",
-    onlinePresenceWindowMs: 5000, // 5-second live activity window
+
+    // Online activity expires after 10 seconds
+    onlinePresenceWindowMs: 10000
   },
 
-  // Baseline metrics to display realistic established wholesale distribution activity
+  // Pakistan Standard Time
+  timezone: "Asia/Karachi",
+
+  // Online tracking
+  onlineWindowMinutes: 10 / 60,
+
+  // Update visitor heartbeat every 5 seconds
+  heartbeatIntervalMs: 5000,
+
+  // Refresh counters every 5 seconds
+  pollIntervalMs: 5000,
+
+  // Smooth counter animation
+  countUpDurationMs: 5000,
+
+  // Actual visitor statistics only
   baseline: {
-    baseTotalVisitors: 12480,
-    baseTodayVisitors: 342,
-    baseOnlineVisitors: 14,
-    baseTotalPageViews: 48920
+    baseTotalVisitors: 0,
+    baseTodayVisitors: 0,
+    baseOnlineVisitors: 0,
+    baseTotalPageViews: 0
   }
 };
 
-// Backward-compatibility alias
+// Backward-compatible alias
 export const VISITOR_CONFIG = VISITOR_COUNTER_CONFIG;

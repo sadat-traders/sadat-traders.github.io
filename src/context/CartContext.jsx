@@ -20,9 +20,9 @@ export function CartProvider({ children }) {
   const [customerInfo, setCustomerInfo] = useState(() => {
     try {
       const saved = localStorage.getItem(USER_INFO_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : { name: '', phone: '', location: '', notes: '' };
+      return saved ? JSON.parse(saved) : { name: '', phone: '', location: '', notes: '', gpsUrl: '' };
     } catch (e) {
-      return { name: '', phone: '', location: '', notes: '' };
+      return { name: '', phone: '', location: '', notes: '', gpsUrl: '' };
     }
   });
 
@@ -113,8 +113,9 @@ export function CartProvider({ children }) {
   /**
    * Validates and proceeds to WhatsApp checkout.
    * Customer Name and Delivery Location are mandatory!
+   * @param {string} [overrideGpsUrl] - Optional live GPS Google Maps URL
    */
-  const proceedToWhatsAppCheckout = () => {
+  const proceedToWhatsAppCheckout = (overrideGpsUrl = null) => {
     if (cartItems.length === 0) {
       alert("Your wholesale cart is empty. Please add products before checking out.");
       return false;
@@ -130,16 +131,22 @@ export function CartProvider({ children }) {
       return false;
     }
 
+    const activeGpsUrl = overrideGpsUrl || customerInfo.gpsUrl || "";
+
     const message = generateCartWhatsAppMessage({
       items: cartItems,
       customerName: customerInfo.name.trim(),
       deliveryLocation: customerInfo.location.trim(),
       contactPhone: customerInfo.phone?.trim() || "",
-      notes: customerInfo.notes?.trim() || ""
+      notes: customerInfo.notes?.trim() || "",
+      gpsLocationUrl: activeGpsUrl
     });
 
     const url = getWhatsAppUrl(message);
-    window.open(url, '_blank');
+    const newWindow = window.open(url, '_blank');
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      window.location.href = url;
+    }
     return true;
   };
 
