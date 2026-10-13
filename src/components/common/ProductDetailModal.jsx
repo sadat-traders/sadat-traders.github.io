@@ -16,6 +16,7 @@ import {
 import { useCart } from '../../context/CartContext';
 import { BUSINESS_CONFIG, generateProductWhatsAppMessage, getWhatsAppUrl } from '../../config/businessConfig';
 import { PRODUCTS } from '../../data/products';
+import WhatsAppIcon from './WhatsAppIcon';
 
 export default function ProductDetailModal({ product, onClose, onSelectProduct }) {
   if (!product) return null;
@@ -288,7 +289,7 @@ export default function ProductDetailModal({ product, onClose, onSelectProduct }
                     onClick={handleWhatsAppOrder}
                     className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-xs sm:text-sm font-bold shadow transition-all"
                   >
-                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <WhatsAppIcon className="w-4 h-4 fill-white" />
                     <span>WhatsApp Order</span>
                   </button>
                 </div>

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BUSINESS_CONFIG, getWhatsAppUrl } from '../config/businessConfig';
 import confetti from 'canvas-confetti';
+import WhatsAppIcon from '../components/common/WhatsAppIcon';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -85,8 +86,8 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           
           <div className="bg-white rounded-2xl p-6 border border-neutral-200/80 shadow-sm flex flex-col items-center text-center">
-            <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-              <MessageCircle className="w-7 h-7 fill-emerald-600 text-emerald-600" />
+            <div className="w-14 h-14 rounded-full bg-emerald-50 text-[#25D366] flex items-center justify-center mb-4">
+              <WhatsAppIcon className="w-7 h-7 fill-[#25D366]" />
             </div>
             <h3 className="font-heading font-bold text-lg text-charcoal mb-1">
               WhatsApp Order Desk
@@ -279,7 +280,7 @@ export default function ContactPage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition-colors"
               >
-                <MessageCircle className="w-4 h-4 fill-white" />
+                <WhatsAppIcon className="w-4 h-4 fill-white" />
                 <span>Chat with Corporate Sales</span>
               </a>
             </div>

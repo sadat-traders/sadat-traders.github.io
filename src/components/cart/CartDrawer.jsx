@@ -23,6 +23,7 @@ import { useCart } from '../../context/CartContext';
 import { BUSINESS_CONFIG } from '../../config/businessConfig';
 import { getCurrentCoordinates } from '../../utils/geolocation';
 import confetti from 'canvas-confetti';
+import WhatsAppIcon from '../common/WhatsAppIcon';
 
 export default function CartDrawer() {
   const navigate = useNavigate();
@@ -508,7 +509,7 @@ export default function CartDrawer() {
                   </>
                 ) : (
                   <>
-                    <MessageCircle className="w-5 h-5 fill-white" />
+                    <WhatsAppIcon className="w-5 h-5 fill-white" />
                     <span>Place Order on WhatsApp</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </>

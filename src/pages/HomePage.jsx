@@ -20,6 +20,7 @@ import {
 import { BUSINESS_CONFIG, getWhatsAppUrl } from '../config/businessConfig';
 import { PRODUCTS, CATEGORIES } from '../data/products';
 import ProductCard from '../components/common/ProductCard';
+import WhatsAppIcon from '../components/common/WhatsAppIcon';
 
 const HERO_SHOWCASE_CUTS = [
   {
@@ -487,7 +488,7 @@ export default function HomePage({ onQuickView }) {
                   rel="noopener noreferrer"
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors text-sm"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <WhatsAppIcon className="w-5 h-5 fill-white" />
                   <span>Connect with Wholesale Manager on WhatsApp</span>
                 </a>
               </div>
@@ -622,7 +623,7 @@ export default function HomePage({ onQuickView }) {
               rel="noopener noreferrer"
               className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-extrabold px-8 py-4 rounded-full shadow-2xl transition-all flex items-center justify-center gap-2 hover:scale-105"
             >
-              <MessageCircle className="w-5 h-5 fill-white" />
+              <WhatsAppIcon className="w-5 h-5 fill-white" />
               <span>WhatsApp Direct Order: +92 349 2355072</span>
             </a>
 

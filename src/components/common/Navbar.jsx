@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BUSINESS_CONFIG, getWhatsAppUrl } from '../../config/businessConfig';
 import { useCart } from '../../context/CartContext';
+import WhatsAppIcon from './WhatsAppIcon';
 
 export default function Navbar({ onOpenSearch }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -77,7 +78,7 @@ export default function Navbar({ onOpenSearch }) {
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-medium"
             >
-              <MessageCircle className="w-3.5 h-3.5 fill-current" />
+              <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
               <span>WhatsApp Quick Inquiry</span>
             </a>
           </div>
@@ -173,7 +174,7 @@ export default function Navbar({ onOpenSearch }) {
                 rel="noopener noreferrer"
                 className="hidden sm:inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full shadow-sm hover:shadow transition-all hover:-translate-y-0.5"
               >
-                <MessageCircle className="w-4 h-4 fill-white" />
+                <WhatsAppIcon className="w-4 h-4 fill-white" />
                 <span>+92 349 2355072</span>
               </a>
 
@@ -218,7 +219,7 @@ export default function Navbar({ onOpenSearch }) {
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow text-sm"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
+                  <WhatsAppIcon className="w-5 h-5 fill-white" />
                   <span>Order on WhatsApp (+92 349 2355072)</span>
                 </a>
 

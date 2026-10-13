@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { BUSINESS_CONFIG, generateProductWhatsAppMessage, getWhatsAppUrl } from '../../config/businessConfig';
+import WhatsAppIcon from './WhatsAppIcon';
 
 export default function ProductCard({ product, onQuickView }) {
   const { addToCart } = useCart();
@@ -177,7 +178,7 @@ export default function ProductCard({ product, onQuickView }) {
               className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-3 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow"
               title="Order this cut immediately on WhatsApp"
             >
-              <MessageCircle className="w-3.5 h-3.5 fill-white" />
+              <WhatsAppIcon className="w-3.5 h-3.5 fill-white" />
               <span>WhatsApp</span>
             </button>
           </div>

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  ShieldCheck, 
-  MessageCircle, 
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  ShieldCheck,
+  MessageCircle,
   ExternalLink,
   ChevronRight,
   Heart
@@ -14,6 +14,7 @@ import {
 import { BUSINESS_CONFIG, getWhatsAppUrl } from '../../config/businessConfig';
 import { CATEGORIES } from '../../data/products';
 import VisitorStatsSection from './VisitorStatsSection';
+import WhatsAppIcon from './WhatsAppIcon';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -23,14 +24,14 @@ export default function Footer() {
       {/* Upper Main Footer Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-          
+
           {/* Brand Info (2 columns on lg) */}
           <div className="lg:col-span-2 flex flex-col gap-5">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-burgundy bg-white p-1">
-                <img 
-                  src="./assets/logo.png" 
-                  alt="Sadat Chicken Logo" 
+                <img
+                  src="./assets/logo.png"
+                  alt="Sadat Chicken Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -45,7 +46,7 @@ export default function Footer() {
             </div>
 
             <p className="text-neutral-400 text-sm leading-relaxed max-w-sm">
-              "Freshness, Quality & Trust in Every Order." <br/>
+              "Freshness, Quality & Trust in Every Order." <br />
               Leading wholesale supplier of fresh, hygienic, and certified 100% Halal chicken meat cuts for hotels, restaurants, catering, supermarkets, and bulk distributors.
             </p>
 
@@ -54,9 +55,9 @@ export default function Footer() {
                 href={getWhatsAppUrl("Hello Sadat Chicken Wholesale, I would like to make an inquiry.")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
+                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow transition-colors"
               >
-                <MessageCircle className="w-4 h-4 fill-white" />
+                <WhatsAppIcon className="w-4 h-4 fill-white" />
                 <span>WhatsApp: +92 349 2355072</span>
               </a>
               <a
@@ -111,8 +112,8 @@ export default function Footer() {
             <ul className="flex flex-col gap-2.5 text-sm">
               {CATEGORIES.slice(1).map((cat) => (
                 <li key={cat.id}>
-                  <Link 
-                    to={`/products?category=${cat.id}`} 
+                  <Link
+                    to={`/products?category=${cat.id}`}
                     className="hover:text-gold transition-colors flex items-center gap-1.5 text-neutral-400"
                   >
                     <ChevronRight className="w-3.5 h-3.5 text-neutral-600" /> {cat.name}
@@ -156,15 +157,15 @@ export default function Footer() {
       <VisitorStatsSection />
 
       {/* Bottom Sub-footer */}
-      <div className="border-t border-neutral-900 bg-black/60 py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
+      <div className="border-t border-neutral-900 bg-black/60 py-6 px-4 sm:px-6 lg:px-8 pb-16 sm:pb-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 sm:pl-20 sm:pr-24">
           <div>
             © {currentYear} <span className="text-neutral-300 font-semibold">{BUSINESS_CONFIG.brandName}</span>. All rights reserved. Registered Halal Food Supply.
           </div>
 
           {/* Developer Portfolio Link */}
           <div className="flex items-center gap-2 text-neutral-400">
-            <span>Crafted with</span>
+            <span>Developed</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
             <span>by</span>
             <a

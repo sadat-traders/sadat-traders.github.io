@@ -1,15 +1,60 @@
-import React from 'react';
-import { Users, Eye, Activity, Calendar, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Eye, Activity, Calendar, ShieldCheck, Radio } from 'lucide-react';
 import { useVisitorStats } from '../../context/VisitorContext';
 
+// Smooth counting animation component
+function AnimatedNumber({ value }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const prevValueRef = useRef(value);
+
+  useEffect(() => {
+    const startValue = prevValueRef.current;
+    const endValue = value;
+    prevValueRef.current = value;
+
+    if (startValue === endValue) {
+      setDisplayValue(endValue);
+      return;
+    }
+
+    const duration = 1200; // ms
+    const startTime = performance.now();
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo for ultra smooth landing
+      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(startValue + (endValue - startValue) * ease);
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    const animId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animId);
+  }, [value]);
+
+  return <>{displayValue.toLocaleString()}</>;
+}
+
 export default function VisitorStatsSection() {
-  const { totalVisitors, todayVisitors, onlineVisitors, totalPageViews, activeMode } = useVisitorStats();
+  const { 
+    totalVisitors, 
+    todayVisitors, 
+    onlineVisitors, 
+    totalPageViews, 
+    activeMode,
+    isLiveConnected 
+  } = useVisitorStats();
 
   const statsCards = [
     {
       id: 'total-visitors',
       label: 'Total Unique Visitors',
-      value: totalVisitors.toLocaleString(),
+      numericValue: totalVisitors,
       icon: Users,
       color: 'text-amber-400',
       bgGlow: 'from-amber-500/10 to-transparent',
@@ -18,26 +63,26 @@ export default function VisitorStatsSection() {
     {
       id: 'today-visitors',
       label: "Today's Visitors",
-      value: todayVisitors.toLocaleString(),
+      numericValue: todayVisitors,
       icon: Calendar,
       color: 'text-blue-400',
       bgGlow: 'from-blue-500/10 to-transparent',
-      sublabel: 'Daily midnight auto-reset'
+      sublabel: 'Daily midnight PKT reset'
     },
     {
       id: 'online-visitors',
       label: 'Live Active Online',
-      value: onlineVisitors.toLocaleString(),
+      numericValue: onlineVisitors,
       icon: Activity,
       color: 'text-emerald-400',
       bgGlow: 'from-emerald-500/10 to-transparent',
-      sublabel: '5-second presence window',
+      sublabel: 'Realtime active presence window',
       isLive: true
     },
     {
       id: 'page-views',
       label: 'Catalog Page Views',
-      value: totalPageViews.toLocaleString(),
+      numericValue: totalPageViews,
       icon: Eye,
       color: 'text-red-400',
       bgGlow: 'from-red-500/10 to-transparent',
@@ -60,10 +105,16 @@ export default function VisitorStatsSection() {
             </h4>
           </div>
           <div className="flex items-center gap-2 text-xs text-neutral-400">
-            <ShieldCheck className="w-4 h-4 text-gold" />
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-              {activeMode === 'firebase' ? 'Firebase Realtime WebSocket Synced' : 'CountAPI Zero-Setup Mode'} • Compatible with GitHub Pages
+            <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+            <span className="inline-flex items-center gap-1.5 flex-wrap">
+              <span className={`w-2 h-2 rounded-full ${isLiveConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`}></span>
+              <span>
+                {activeMode === 'firebase' 
+                  ? 'Firebase Realtime WebSocket Synced' 
+                  : (isLiveConnected ? 'CountAPI Realtime Cloud Synced' : 'CountAPI Zero-Setup Mode')}
+              </span>
+              <span className="text-neutral-600 hidden sm:inline">•</span>
+              <span className="text-neutral-500">Compatible with GitHub Pages</span>
             </span>
           </div>
         </div>
@@ -90,10 +141,11 @@ export default function VisitorStatsSection() {
 
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl sm:text-3xl font-extrabold text-white font-heading tracking-tight">
-                    {item.value}
+                    <AnimatedNumber value={item.numericValue} />
                   </span>
                   {item.isLive && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                       LIVE
                     </span>
                   )}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { VISITOR_COUNTER_CONFIG } from '../config/visitor-counter-config';
 
 // Dynamic / safe Firebase imports
@@ -15,31 +15,111 @@ import {
 
 const VisitorContext = createContext();
 
-const UUID_KEY = 'sadat_visitor_uuid_v1';
-const STATS_KEY = 'sadat_visitor_stats_v1';
-const HEARTBEAT_KEY = 'sadat_online_heartbeat_v1';
-const REGISTERED_VISITOR_KEY = 'sadat_visitor_registered_v1';
+const UUID_KEY = 'sadat_visitor_uuid_v3';
+const STATS_KEY = 'sadat_visitor_stats_real_v1';
+const REGISTERED_VISITOR_KEY = 'sadat_visitor_registered_real_v1';
+const LAST_VISITED_DATE_KEY = 'sadat_visitor_last_date_real_v1';
+const TAB_HB_PREFIX = 'sadat_real_tab_hb_';
+
+// Helper to get current date formatted in Asia/Karachi (or configured timezone)
+function getTodayDateString(timezone = 'Asia/Karachi') {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
+  } catch (e) {
+    return new Date().toISOString().split('T')[0];
+  }
+}
+
+// Clean up any legacy localStorage entries that had artificial/fake baselines
+function purgeLegacyFakeStats() {
+  try {
+    ['sadat_visitor_stats_v1', 'sadat_visitor_stats_v2', 'sadat_online_heartbeat_v1'].forEach(k => {
+      localStorage.removeItem(k);
+    });
+  } catch (e) {}
+}
+
+// Helper to count active browser tabs in real time
+function countActiveLocalTabs() {
+  try {
+    const now = Date.now();
+    let activeTabs = 0;
+    const keysToRemove = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(TAB_HB_PREFIX)) {
+        const val = parseInt(localStorage.getItem(key) || '0', 10);
+        if (now - val < 8000) {
+          activeTabs++;
+        } else {
+          keysToRemove.push(key);
+        }
+      }
+    }
+
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+    return Math.max(1, activeTabs);
+  } catch (e) {
+    return 1;
+  }
+}
 
 export function VisitorProvider({ children }) {
   const config = VISITOR_COUNTER_CONFIG;
   const baseline = config.baseline || {
-    baseTotalVisitors: 12480,
-    baseTodayVisitors: 342,
-    baseOnlineVisitors: 14,
-    baseTotalPageViews: 48920
+    baseTotalVisitors: 0,
+    baseTodayVisitors: 0,
+    baseOnlineVisitors: 0,
+    baseTotalPageViews: 0
   };
 
+  const baseTotal = baseline.baseTotalVisitors || 0;
+  const baseToday = baseline.baseTodayVisitors || 0;
+  const baseOnline = baseline.baseOnlineVisitors || 0;
+  const baseViews = baseline.baseTotalPageViews || 0;
+
+  // Purge any stale legacy fake-inflated cache
+  purgeLegacyFakeStats();
+
+  // Instant hydration from local storage if available
+  const initialLocalStats = (() => {
+    try {
+      const stored = localStorage.getItem(STATS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Only use parsed stats if they are realistic (< 10000)
+        if (parsed && typeof parsed.totalVisitors === 'number' && parsed.totalVisitors < 10000) {
+          return {
+            totalVisitors: parsed.totalVisitors,
+            todayVisitors: parsed.todayVisitors,
+            onlineVisitors: Math.max(1, parsed.onlineVisitors || 1),
+            totalPageViews: parsed.totalPageViews,
+          };
+        }
+      }
+    } catch (e) {}
+
+    return {
+      totalVisitors: baseTotal || 1,
+      todayVisitors: baseToday || 1,
+      onlineVisitors: 1,
+      totalPageViews: baseViews || 1,
+    };
+  })();
+
   const [stats, setStats] = useState({
-    totalVisitors: baseline.baseTotalVisitors,
-    todayVisitors: baseline.baseTodayVisitors,
-    onlineVisitors: baseline.baseOnlineVisitors,
-    totalPageViews: baseline.baseTotalPageViews,
+    ...initialLocalStats,
     activeMode: 'countapi',
     isLiveConnected: false,
   });
 
   const visitorUuidRef = useRef('');
+  const tabIdRef = useRef('tab_' + Math.random().toString(36).substring(2, 9));
   const firebaseDbRef = useRef(null);
+  const broadcastChannelRef = useRef(null);
+  const lastPageViewTimeRef = useRef(0);
+  const presencePingWindowRef = useRef(0);
 
   // Check if Firebase credentials are provided
   const hasFirebaseCredentials = Boolean(
@@ -51,82 +131,110 @@ export function VisitorProvider({ children }) {
 
   const shouldRunFirebase = (config.mode === 'auto' && hasFirebaseCredentials) || config.mode === 'firebase';
 
+  // CountAPI helper function
+  const countApiRequest = useCallback(async (action, key) => {
+    const { baseUrl } = config.countapi;
+    if (!baseUrl || !key) return null;
+    try {
+      const res = await fetch(`${baseUrl}/${action}/${encodeURIComponent(key)}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.value === 'number' ? data.value : null;
+    } catch (err) {
+      return null;
+    }
+  }, [config.countapi]);
+
   useEffect(() => {
-    // 1. Identify or generate unique anonymous browser UUID
+    const todayDateKey = getTodayDateString(config.timezone);
+
+    // 1. Cross-tab real-time broadcast channel
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        const bc = new BroadcastChannel('sadat_traffic_analytics_channel');
+        broadcastChannelRef.current = bc;
+        bc.onmessage = (event) => {
+          if (event.data && typeof event.data === 'object') {
+            setStats(prev => ({
+              ...prev,
+              ...event.data,
+              isLiveConnected: true
+            }));
+          }
+        };
+      } catch (e) {}
+    }
+
+    // 2. Identify or generate persistent visitor UUID
     let visitorUuid = localStorage.getItem(UUID_KEY);
-    const isFirstTimeVisitor = !visitorUuid;
-    if (isFirstTimeVisitor) {
+    if (!visitorUuid) {
       visitorUuid = 'scw_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
       localStorage.setItem(UUID_KEY, visitorUuid);
     }
     visitorUuidRef.current = visitorUuid;
 
-    const todayDateKey = new Date().toISOString().split('T')[0];
+    // 3. Register real tab heartbeat
+    const currentTabKey = TAB_HB_PREFIX + tabIdRef.current;
+    const writeTabHeartbeat = () => {
+      try {
+        localStorage.setItem(currentTabKey, Date.now().toString());
+      } catch (e) {}
+    };
+    writeTabHeartbeat();
+    const tabHbInterval = setInterval(writeTabHeartbeat, 3000);
+
+    const cleanupTab = () => {
+      try {
+        localStorage.removeItem(currentTabKey);
+      } catch (e) {}
+    };
+    window.addEventListener('beforeunload', cleanupTab);
 
     // =========================================================================
-    // MODE 1: Google Firebase Realtime Database Mode
+    // MODE 1: Google Firebase Realtime Database
     // =========================================================================
     if (shouldRunFirebase && hasFirebaseCredentials) {
       try {
-        let app;
-        if (!getApps().length) {
-          app = initializeApp(config.firebase);
-        } else {
-          app = getApp();
-        }
-
+        let app = getApps().length ? getApp() : initializeApp(config.firebase);
         const db = getDatabase(app);
         firebaseDbRef.current = db;
 
-        // A. Real-time Presence & Disconnect Tracking
         const userPresenceRef = ref(db, `presence/${visitorUuid}`);
         const connectedRef = ref(db, '.info/connected');
         const allPresenceRef = ref(db, 'presence');
+        const statsRef = ref(db, 'stats');
 
         onValue(connectedRef, (snap) => {
           if (snap.val() === true) {
-            // Set user presence
             set(userPresenceRef, {
               online: true,
               lastActive: serverTimestamp(),
               userAgent: navigator.userAgent.substring(0, 50)
             });
-
-            // Auto disconnect cleanup on browser close or network drop
             onDisconnect(userPresenceRef).remove();
-
-            setStats(prev => ({
-              ...prev,
-              activeMode: 'firebase',
-              isLiveConnected: true
-            }));
+            setStats(prev => ({ ...prev, activeMode: 'firebase', isLiveConnected: true }));
           }
         });
 
-        // Listen for all concurrent online visitors
         const unsubscribePresence = onValue(allPresenceRef, (snapshot) => {
           const data = snapshot.val();
           const liveCount = data ? Object.keys(data).length : 1;
-          const displayOnline = Math.max(1, (baseline.baseOnlineVisitors || 0) + liveCount - 1);
+          const displayOnline = baseOnline > 0 
+            ? Math.max(1, baseOnline + liveCount - 1)
+            : Math.max(1, liveCount);
 
-          setStats(prev => ({
-            ...prev,
-            onlineVisitors: displayOnline,
-            activeMode: 'firebase'
-          }));
+          setStats(prev => ({ ...prev, onlineVisitors: displayOnline, activeMode: 'firebase' }));
         });
 
-        // B. Real-time Statistics Sync (Total Visitors, Today, PageViews)
-        const statsRef = ref(db, 'stats');
-        const alreadyRegistered = localStorage.getItem(REGISTERED_VISITOR_KEY);
+        const isRegisteredUnique = localStorage.getItem(REGISTERED_VISITOR_KEY) === 'true';
+        const hasVisitedToday = localStorage.getItem(LAST_VISITED_DATE_KEY) === todayDateKey;
 
-        // Transaction to register new unique visitors
         runTransaction(statsRef, (currentData) => {
           if (!currentData) {
             return {
-              totalVisitors: baseline.baseTotalVisitors + 1,
-              todayVisitors: baseline.baseTodayVisitors + 1,
-              totalPageViews: baseline.baseTotalPageViews + 1,
+              totalVisitors: 1,
+              todayVisitors: 1,
+              totalPageViews: 1,
               lastDate: todayDateKey
             };
           }
@@ -135,8 +243,11 @@ export function VisitorProvider({ children }) {
           if (updated.lastDate !== todayDateKey) {
             updated.lastDate = todayDateKey;
             updated.todayVisitors = 1;
-          } else if (!alreadyRegistered) {
+          } else if (!hasVisitedToday) {
             updated.todayVisitors = (updated.todayVisitors || 0) + 1;
+          }
+
+          if (!isRegisteredUnique) {
             updated.totalVisitors = (updated.totalVisitors || 0) + 1;
           }
 
@@ -144,19 +255,19 @@ export function VisitorProvider({ children }) {
           return updated;
         }).then(() => {
           localStorage.setItem(REGISTERED_VISITOR_KEY, 'true');
+          localStorage.setItem(LAST_VISITED_DATE_KEY, todayDateKey);
         }).catch((err) => {
           console.warn("Firebase transaction fallback:", err);
         });
 
-        // Listen for stats changes across all clients
         const unsubscribeStats = onValue(statsRef, (snapshot) => {
           const remoteStats = snapshot.val();
           if (remoteStats) {
             setStats(prev => ({
               ...prev,
-              totalVisitors: remoteStats.totalVisitors || baseline.baseTotalVisitors,
-              todayVisitors: remoteStats.todayVisitors || baseline.baseTodayVisitors,
-              totalPageViews: remoteStats.totalPageViews || baseline.baseTotalPageViews,
+              totalVisitors: remoteStats.totalVisitors || 1,
+              todayVisitors: remoteStats.todayVisitors || 1,
+              totalPageViews: remoteStats.totalPageViews || 1,
               activeMode: 'firebase',
               isLiveConnected: true
             }));
@@ -166,108 +277,178 @@ export function VisitorProvider({ children }) {
         return () => {
           unsubscribePresence();
           unsubscribeStats();
-          // Remove active user presence on unmount
+          cleanupTab();
+          clearInterval(tabHbInterval);
+          window.removeEventListener('beforeunload', cleanupTab);
           try {
             set(userPresenceRef, null);
           } catch (e) {}
         };
-
       } catch (firebaseErr) {
         console.error("Firebase Realtime Database failed to initialize, falling back to CountAPI:", firebaseErr);
-        // Fall through to CountAPI mode
       }
     }
 
     // =========================================================================
-    // MODE 2: CountAPI Service Mode (Zero-setup out of the box)
+    // MODE 2: CountAPI Cloud Synchronization (Pure Genuine Real Analytics)
     // =========================================================================
-    // A. Local storage persistent baseline
-    let localStats = null;
-    try {
-      const stored = localStorage.getItem(STATS_KEY);
-      if (stored) localStats = JSON.parse(stored);
-    } catch (e) {}
+    const namespace = config.countapi.namespace || 'sadat-chicken-wholesale-v1';
+    const pageviewsKey = `${namespace}_pageviews`;
+    const uniqueVisitorsKey = `${namespace}_unique_visitors`;
+    const todayKey = `${namespace}_today_${todayDateKey}`;
 
-    if (!localStats) {
-      localStats = {
-        totalVisitors: baseline.baseTotalVisitors + (isFirstTimeVisitor ? 1 : 0),
-        todayVisitors: baseline.baseTodayVisitors + (isFirstTimeVisitor ? 1 : 0),
-        totalPageViews: baseline.baseTotalPageViews + 1,
-        lastDate: todayDateKey
-      };
-    } else {
-      if (localStats.lastDate !== todayDateKey) {
-        localStats.lastDate = todayDateKey;
-        localStats.todayVisitors = 1;
-      } else if (isFirstTimeVisitor) {
-        localStats.todayVisitors += 1;
-        localStats.totalVisitors += 1;
+    // A. Real-time active presence calculation
+    const updateOnlinePresence = async () => {
+      const activeLocalTabs = countActiveLocalTabs();
+      let realOnline = activeLocalTabs;
+
+      // Ping a 30-second rolling presence window on CountAPI across all online visitors
+      const currentWindow = Math.floor(Date.now() / 30000);
+      const presenceKey = `${namespace}_pres_${currentWindow}`;
+
+      if (presencePingWindowRef.current !== currentWindow) {
+        presencePingWindowRef.current = currentWindow;
+        try {
+          const val = await countApiRequest('hit', presenceKey);
+          if (typeof val === 'number') {
+            realOnline = Math.max(activeLocalTabs, val);
+          }
+        } catch (e) {}
+      } else {
+        try {
+          const val = await countApiRequest('get', presenceKey);
+          if (typeof val === 'number') {
+            realOnline = Math.max(activeLocalTabs, val);
+          }
+        } catch (e) {}
       }
-      localStats.totalPageViews += 1;
-    }
-    localStorage.setItem(STATS_KEY, JSON.stringify(localStats));
-
-    // B. Online Presence via 5-second Activity Heartbeat & Local Session Sync
-    const updateCountApiPresence = () => {
-      const now = Date.now();
-      localStorage.setItem(HEARTBEAT_KEY, JSON.stringify({ uuid: visitorUuid, timestamp: now }));
-
-      const baseOnline = baseline.baseOnlineVisitors || 14;
-      const variation = Math.floor(Math.sin(now / 15000) * 4) + Math.floor(Math.random() * 3);
-      const computedOnline = Math.max(3, baseOnline + variation);
 
       setStats(prev => ({
         ...prev,
-        totalVisitors: localStats.totalVisitors,
-        todayVisitors: localStats.todayVisitors,
-        totalPageViews: localStats.totalPageViews,
-        onlineVisitors: computedOnline,
+        onlineVisitors: Math.max(1, realOnline),
         activeMode: 'countapi',
         isLiveConnected: true
       }));
     };
 
-    updateCountApiPresence();
-    const heartbeatTimer = setInterval(updateCountApiPresence, config.countapi.onlinePresenceWindowMs || 5000);
+    updateOnlinePresence();
+    const onlineInterval = setInterval(updateOnlinePresence, config.heartbeatIntervalMs || 5000);
 
-    // C. CountAPI HTTP endpoints (if endpoint reachable)
-    const { baseUrl, namespace } = config.countapi;
-    if (baseUrl && namespace) {
-      // Hit catalog page views
-      fetch(`${baseUrl}/hit/${namespace}/pageviews`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && typeof data.value === 'number') {
-            setStats(prev => ({
-              ...prev,
-              totalPageViews: baseline.baseTotalPageViews + data.value
+    // B. Check registration status
+    const isRegisteredUnique = localStorage.getItem(REGISTERED_VISITOR_KEY) === 'true';
+    const hasVisitedToday = localStorage.getItem(LAST_VISITED_DATE_KEY) === todayDateKey;
+
+    // C. Sync genuine metrics with CountAPI
+    const syncWithCountApi = async () => {
+      try {
+        // 1. Unique visitors: HIT if first time ever, GET otherwise
+        const uniquePromise = (!isRegisteredUnique)
+          ? countApiRequest('hit', uniqueVisitorsKey)
+          : countApiRequest('get', uniqueVisitorsKey);
+
+        // 2. Today's visitors: HIT if first visit today, GET otherwise
+        const todayPromise = (!hasVisitedToday)
+          ? countApiRequest('hit', todayKey)
+          : countApiRequest('get', todayKey);
+
+        // 3. Catalog Page Views: GET current count
+        const pageviewsPromise = countApiRequest('get', pageviewsKey);
+
+        const [remoteUnique, remoteToday, remoteViews] = await Promise.all([
+          uniquePromise,
+          todayPromise,
+          pageviewsPromise
+        ]);
+
+        if (!isRegisteredUnique && remoteUnique !== null) {
+          localStorage.setItem(REGISTERED_VISITOR_KEY, 'true');
+        }
+        if (!hasVisitedToday && remoteToday !== null) {
+          localStorage.setItem(LAST_VISITED_DATE_KEY, todayDateKey);
+        }
+
+        setStats(prev => {
+          const nextTotal = (remoteUnique !== null) ? remoteUnique : prev.totalVisitors;
+          const nextToday = (remoteToday !== null) ? remoteToday : prev.todayVisitors;
+          const nextViews = (remoteViews !== null) ? remoteViews : prev.totalPageViews;
+
+          const updated = {
+            ...prev,
+            totalVisitors: Math.max(1, nextTotal),
+            todayVisitors: Math.max(1, nextToday),
+            totalPageViews: Math.max(1, nextViews),
+            activeMode: 'countapi',
+            isLiveConnected: true
+          };
+
+          // Save genuine stats to local storage
+          try {
+            localStorage.setItem(STATS_KEY, JSON.stringify({
+              totalVisitors: updated.totalVisitors,
+              todayVisitors: updated.todayVisitors,
+              totalPageViews: updated.totalPageViews,
+              onlineVisitors: updated.onlineVisitors,
+              lastDate: todayDateKey
             }));
+          } catch (e) {}
+
+          // Broadcast to any other open tabs
+          if (broadcastChannelRef.current) {
+            broadcastChannelRef.current.postMessage(updated);
           }
-        })
-        .catch(() => {});
 
-      // Hit unique visitors if first visit
-      if (isFirstTimeVisitor) {
-        fetch(`${baseUrl}/hit/${namespace}/unique-visitors`)
-          .then(res => res.json())
-          .then(data => {
-            if (data && typeof data.value === 'number') {
-              setStats(prev => ({
-                ...prev,
-                totalVisitors: baseline.baseTotalVisitors + data.value
-              }));
-            }
-          })
-          .catch(() => {});
+          return updated;
+        });
+
+      } catch (err) {
+        console.warn("CountAPI sync warning:", err);
       }
+    };
+
+    syncWithCountApi();
+    const pollTimer = setInterval(syncWithCountApi, config.pollIntervalMs || 15000);
+
+    return () => {
+      clearInterval(onlineInterval);
+      clearInterval(pollTimer);
+      clearInterval(tabHbInterval);
+      cleanupTab();
+      window.removeEventListener('beforeunload', cleanupTab);
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.close();
+      }
+    };
+  }, [config, baseOnline, shouldRunFirebase, hasFirebaseCredentials, countApiRequest]);
+
+  // Record real page view on route navigation
+  const recordPageView = useCallback(async () => {
+    const now = Date.now();
+    // Throttle consecutive rapid triggers within 600ms
+    if (now - lastPageViewTimeRef.current < 600) {
+      return;
     }
+    lastPageViewTimeRef.current = now;
 
-    return () => clearInterval(heartbeatTimer);
-  }, []);
+    // 1. Optimistically increment real page views
+    setStats(prev => {
+      const nextViews = prev.totalPageViews + 1;
+      const updated = { ...prev, totalPageViews: nextViews };
 
-  // Helper to record page views on route navigation
-  const recordPageView = () => {
-    // If Firebase is active, update in Firebase Realtime Database
+      try {
+        const stored = localStorage.getItem(STATS_KEY);
+        const parsed = stored ? JSON.parse(stored) : {};
+        parsed.totalPageViews = nextViews;
+        localStorage.setItem(STATS_KEY, JSON.stringify(parsed));
+      } catch (e) {}
+
+      if (broadcastChannelRef.current) {
+        broadcastChannelRef.current.postMessage({ totalPageViews: nextViews });
+      }
+
+      return updated;
+    });
+
+    // 2. Persist real hit to Firebase or CountAPI
     if (firebaseDbRef.current) {
       try {
         const statsRef = ref(firebaseDbRef.current, 'stats');
@@ -275,26 +456,24 @@ export function VisitorProvider({ children }) {
           if (!data) return data;
           return {
             ...data,
-            totalPageViews: (data.totalPageViews || baseline.baseTotalPageViews) + 1
+            totalPageViews: (data.totalPageViews || 0) + 1
           };
         }).catch(() => {});
       } catch (e) {}
-    }
-
-    // In all modes, ensure local state reflects the pageview
-    setStats(prev => {
-      const nextViews = prev.totalPageViews + 1;
+    } else {
+      const namespace = config.countapi.namespace || 'sadat-chicken-wholesale-v1';
+      const pageviewsKey = `${namespace}_pageviews`;
       try {
-        const stored = localStorage.getItem(STATS_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.totalPageViews = nextViews;
-          localStorage.setItem(STATS_KEY, JSON.stringify(parsed));
+        const val = await countApiRequest('hit', pageviewsKey);
+        if (typeof val === 'number') {
+          setStats(prev => ({
+            ...prev,
+            totalPageViews: val
+          }));
         }
       } catch (e) {}
-      return { ...prev, totalPageViews: nextViews };
-    });
-  };
+    }
+  }, [config.countapi, countApiRequest]);
 
   return (
     <VisitorContext.Provider value={{ ...stats, recordPageView }}>

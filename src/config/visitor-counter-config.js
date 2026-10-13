@@ -2,15 +2,14 @@
 /**
  * SADAT CHICKEN WHOLESALE
  * Professional Real-Time Visitor Counter
- * Compatible with GitHub Pages
+ * Compatible with GitHub Pages & Static Hosting
  */
 
 export const VISITOR_COUNTER_CONFIG = {
-  // Operating mode
-  // auto | firebase | countapi
+  // Operating mode: "auto" (detects Firebase credentials, else uses CountAPI), "firebase", or "countapi"
   mode: "auto",
 
-  // Firebase Realtime Database
+  // Firebase Realtime Database (Optional: Paste credentials for WebSocket live sync)
   firebase: {
     apiKey: "",
     authDomain: "",
@@ -21,16 +20,16 @@ export const VISITOR_COUNTER_CONFIG = {
     appId: ""
   },
 
-  // CountAPI configuration
+  // CountAPI configuration (Zero-setup public cloud counter)
   countapi: {
     baseUrl: "https://countapi.mileshilliard.com/api/v1",
     namespace: "sadat-chicken-wholesale-v1",
 
-    // Online activity expires after 10 seconds
+    // Online activity heartbeat window
     onlinePresenceWindowMs: 10000
   },
 
-  // Pakistan Standard Time
+  // Pakistan Standard Time for accurate midnight reset
   timezone: "Asia/Karachi",
 
   // Online tracking
@@ -39,13 +38,13 @@ export const VISITOR_COUNTER_CONFIG = {
   // Update visitor heartbeat every 5 seconds
   heartbeatIntervalMs: 5000,
 
-  // Refresh counters every 5 seconds
-  pollIntervalMs: 5000,
+  // Refresh counters from server every 15 seconds
+  pollIntervalMs: 15000,
 
   // Smooth counter animation
-  countUpDurationMs: 5000,
+  countUpDurationMs: 1500,
 
-  // Actual visitor statistics only
+  // Pure genuine real-time visitor statistics only - No artificial baselines
   baseline: {
     baseTotalVisitors: 0,
     baseTodayVisitors: 0,
@@ -56,3 +55,4 @@ export const VISITOR_COUNTER_CONFIG = {
 
 // Backward-compatible alias
 export const VISITOR_CONFIG = VISITOR_COUNTER_CONFIG;
+

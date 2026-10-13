@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { BUSINESS_CONFIG, generateWholesaleQuoteWhatsAppMessage, getWhatsAppUrl } from '../config/businessConfig';
 import confetti from 'canvas-confetti';
+import WhatsAppIcon from '../components/common/WhatsAppIcon';
 
 export default function WholesalePage() {
   const [formData, setFormData] = useState({
@@ -237,7 +238,7 @@ export default function WholesalePage() {
                 type="submit"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-extrabold py-4 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base hover:scale-[1.01]"
               >
-                <MessageCircle className="w-5 h-5 fill-white" />
+                <WhatsAppIcon className="w-5 h-5 fill-white" />
                 <span>Submit Wholesale Request on WhatsApp</span>
               </button>
 
@@ -281,7 +282,7 @@ export default function WholesalePage() {
                 rel="noopener noreferrer"
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow text-sm transition-colors"
               >
-                <MessageCircle className="w-4 h-4 fill-white" />
+                <WhatsAppIcon className="w-4 h-4 fill-white" />
                 <span>WhatsApp Wholesale Desk (+92 349 2355072)</span>
               </a>
             </div>
